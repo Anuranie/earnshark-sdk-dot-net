@@ -18,16 +18,16 @@ namespace earnshark_sdk_dot_net
         static string baseURL = "https://app.earnshark.com/prod/";
         static string appDir = "http://app.earnshark.com/";
 
-        public async Task<JArray> addNewSubscription(int product_id, string key, JObject jObject)
+        public async Task<JObject> addNewSubscription(int product_id, string key, JObject jObject)
         {
-            JArray newSubscription = null;
+            JObject newSubscription = null;
             HttpResponseMessage response = await client.PostAsJsonAsync(baseURL + "product/" + product_id.ToString() + "/addsubscriptionfromapi?key=" + key.ToString(), jObject);
 
             if (response.IsSuccessStatusCode)
             {
                 string temp = await response.Content.ReadAsStringAsync();
-
-                newSubscription = JArray.Parse(temp);
+                dynamic dynObj = JsonConvert.DeserializeObject(temp);
+                newSubscription = JObject.Parse(dynObj);
             }
 
             return newSubscription;
@@ -48,31 +48,31 @@ namespace earnshark_sdk_dot_net
             return account;
         }
 
-        public async Task<JArray> renewSubscription(int product_id, string key, int subscription_id, int new_license_id)
+        public async Task<JObject> renewSubscription(int product_id, string key, int subscription_id, int new_license_id)
         {
             string path = baseURL + "product/" + product_id + "/subscription/" + subscription_id + "/apiRenewSubscription/" + new_license_id + "?key=" + key;
 
-            JArray subscription = null;
+            JObject subscription = null;
 
             HttpResponseMessage response = await client.GetAsync(path);
             if (response.IsSuccessStatusCode)
             {
                 string temp = await response.Content.ReadAsStringAsync();
-                subscription = JArray.Parse(temp);
+                subscription = JObject.Parse(temp);
             }
             return subscription;
         }
 
-        public async Task<JArray> getLicenseInformation(int product_id, string key, int license_id)
+        public async Task<JObject> getLicenseInformation(int product_id, string key, int license_id)
         {
             string path = baseURL + "product/" + product_id + "/license/" + license_id + "/getlicensefromapi?key=" + key;
 
-            JArray license = null;
+            JObject license = null;
             HttpResponseMessage response = await client.GetAsync(path);
             if (response.IsSuccessStatusCode)
             {
                 string temp = await response.Content.ReadAsStringAsync();
-                license = JArray.Parse(temp);
+                license = JObject.Parse(temp);
             }
             return license;
         }
@@ -105,23 +105,23 @@ namespace earnshark_sdk_dot_net
             return licenses;
         }
 
-        public async Task<JArray> getPaymentToken(JObject body)
+        public async Task<JObject> getPaymentToken(JObject body)
         {
-            JArray transactionId = null;
+            JObject transactionId = null;
             HttpResponseMessage response = await client.PostAsJsonAsync(baseURL + "payments/getTransactionID", body);
 
             if (response.IsSuccessStatusCode)
             {
                 string temp = await response.Content.ReadAsStringAsync();
-                transactionId = JArray.Parse(temp);
+                transactionId = JObject.Parse(temp);
             }
 
             return transactionId;
         }
 
-        public string getTransactionURL(JToken key)
+        public string getTransactionURL(JObject key)
         {
-            JToken shortToken = key.Value<string>("shortToken");
+            string shortToken = (string)key["shortToken"];
             return appDir + "payment2.html?transactionID=" + shortToken;
         }
     }
