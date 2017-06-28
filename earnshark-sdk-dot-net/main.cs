@@ -18,10 +18,24 @@ namespace earnshark_sdk_dot_net
         static string baseURL = "https://app.earnshark.com/prod/";
         static string appDir = "http://app.earnshark.com/";
 
-        public async Task<JObject> addNewSubscription(int product_id, string key, JObject jObject)
+        public async Task<JObject> addNewSubscription(int product_id, string key, string name, string email, string accountID, string start_date, int license_id, string enableNotifications, string sendInvoiceNow)
         {
+
+            JObject user = new JObject(
+                 new JProperty("account",
+                    new JObject(
+                        new JProperty("name", name),
+                        new JProperty("email", email),
+                        new JProperty("accountID", accountID),
+                        new JProperty("start_date", start_date)
+                    )),
+                 new JProperty("license_id", license_id),
+                 new JProperty("enableNotifications", enableNotifications),
+                 new JProperty("sendInvoiceNow", sendInvoiceNow)
+            );
+
             JObject newSubscription = null;
-            HttpResponseMessage response = await client.PostAsJsonAsync(baseURL + "product/" + product_id.ToString() + "/addsubscriptionfromapi?key=" + key.ToString(), jObject);
+            HttpResponseMessage response = await client.PostAsJsonAsync(baseURL + "product/" + product_id.ToString() + "/addsubscriptionfromapi?key=" + key.ToString(), user);
 
             if (response.IsSuccessStatusCode)
             {
@@ -105,24 +119,24 @@ namespace earnshark_sdk_dot_net
             return licenses;
         }
 
-        public async Task<JObject> getPaymentToken(JObject body)
+        public async Task<string> getPaymentURL(int product_id, string key, string account_id, string redirect)
         {
-            JObject transactionId = null;
+            JObject body = new JObject
+            {
+                new JProperty("redirect", redirect),
+                new JProperty("account_id", account_id),
+                new JProperty("product_id", product_id),
+                new JProperty("key", key)
+            };
+
+            string url = null;
             HttpResponseMessage response = await client.PostAsJsonAsync(baseURL + "payments/getTransactionID", body);
 
             if (response.IsSuccessStatusCode)
             {
-                string temp = await response.Content.ReadAsStringAsync();
-                transactionId = JObject.Parse(temp);
+                url = await response.Content.ReadAsStringAsync();
             }
-
-            return transactionId;
-        }
-
-        public string getTransactionURL(JObject key)
-        {
-            string shortToken = (string)key["shortToken"];
-            return appDir + "payment2.html?transactionID=" + shortToken;
+            return url.Trim('"');
         }
     }
 }
